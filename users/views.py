@@ -1,32 +1,48 @@
 from rest_framework.decorators import api_view
+from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.authtoken.serializers import AuthTokenSerializer
 from knox.auth import AuthToken
 from .serializers import RegisterSerializer
+from .models import userModel
+from rest_framework.exceptions import AuthenticationFailed
+from django.contrib.auth.models import User
 
-@api_view(['POST'])
-def login_api(request):
-    serializer= AuthTokenSerializer(data=request.data)
-    serializer.is_valid(raise_exception=True)
-    user = serializer.validated_data['user']
-    _, token = AuthToken.objects.create(user) 
+class login_api(APIView):
+    def post(self, request):
+        email = request.data['email']
+        password = request.data['password']
 
-    return Response({
-        'user_info': {
-            'id': user.id,
-            'username': user.username,
-            'email': user.email
-        },
-        'token': token
-    })
+        models = User.objects.filter(email=email).first()
+        
+        if models is None:
+            raise AuthenticationFailed('user not found')
+        else:
+            if models.password != password:
+                raise AuthenticationFailed('password not current')
+            else:
+                _, token = AuthToken.objects.create(models) 
 
-@api_view(['GET'])
-def get_user_data(request):
-    user= request.user
+        # serializer= AuthTokenSerializer(data=request.data)
+        # serializer.is_valid(raise_exception=True)
+        # user = serializer.validated_data['user']
 
-    if user.is_authenticated:
         return Response({
-            'user_info': {
+                'user_info': {
+                'id': models.id,
+                'username': models.username,
+                'email': models.email
+            },
+            'token': token
+        })
+
+class get_user_data(APIView):
+    def get(self, request):
+        user= request.user
+
+        if user.is_authenticated:
+            return Response({
+                'user_info': {
                 'id': user.id,
                 'username': user.username,
                 'email': user.email
@@ -34,22 +50,19 @@ def get_user_data(request):
             'status': 0
         })
 
-    return Response({'error': 'not authenticated', 'status': 1})
+        return Response({'error': 'not authenticated', 'status': 1})
 
-@api_view(['POST'])
-def register_api(request):
-    serializer = RegisterSerializer(data=request.data)
-    serializer.is_valid(raise_exception=True)
+class register_api(APIView):
+    def post(self, request):
+        serializer = RegisterSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
 
-    user = serializer.save()
+        user = serializer.save()
 
-    _, token= AuthToken.objects.create(user)
-
-    return Response({
-         'user_info': {
-            'id': user.id,
-            'username': user.username,
-            'email': user.email
-        },
-        'token': token
-    })
+        return Response({
+                'user_info': {
+                'id': user.id,
+                'username': user.username,
+                'email': user.email
+            }
+        })
