@@ -10,4 +10,17 @@ class userModel(models.Model):
     def __self__(self):
         return self.username
 
+class colorModel(models.Model):
+    colorName= models.CharField(max_length=50)
+    colorCode= models.CharField(max_length=50)
+
+    def __self__(self):
+        return self.colorCode
+
+class objectModel(models.Model):
+    objectName= models.CharField(max_length=255)
+    image= models.CharField(max_length=255)
+
+    def __self__(self):
+        return self.image
 # Create your models here.

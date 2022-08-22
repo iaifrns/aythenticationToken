@@ -1,5 +1,6 @@
 from django.contrib.auth.models import User
 from rest_framework import serializers, validators
+from .models import colorModel, objectModel
 
 class RegisterSerializer(serializers.ModelSerializer):
     class Meta:
@@ -36,3 +37,12 @@ class RegisterSerializer(serializers.ModelSerializer):
 
         return user
 
+class objectSerializer(serializers.ModelSerializer):
+    class Meta:
+        model= objectModel
+        field=['objectName', 'image']
+
+class colorSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = colorModel
+        field= ['colorName', 'colorCode']
